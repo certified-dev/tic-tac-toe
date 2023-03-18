@@ -1,11 +1,13 @@
 import json
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+
 class TicTacToeConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
+        print('connecting')
         self.room_name = self.scope['url_route']['kwargs']['room_code']
         self.room_group_name = 'room_%s' % self.room_name
-        
+
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -13,14 +15,14 @@ class TicTacToeConsumer(AsyncJsonWebsocketConsumer):
         )
         await self.accept()
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code):
         print("Disconnected")
         # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
-    
+
     async def receive(self, text_data):
         """
         Receive message from WebSocket.
@@ -36,7 +38,7 @@ class TicTacToeConsumer(AsyncJsonWebsocketConsumer):
                 'message': message,
                 "event": "MOVE"
             })
-            
+
         if event == 'START':
             # Send message to room group
             await self.channel_layer.group_send(self.room_group_name, {
@@ -44,7 +46,7 @@ class TicTacToeConsumer(AsyncJsonWebsocketConsumer):
                 'message': message,
                 'event': "START"
             })
-            
+
         if event == 'END':
             # Send message to room group
             await self.channel_layer.group_send(self.room_group_name, {
